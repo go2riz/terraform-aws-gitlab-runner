@@ -36,15 +36,15 @@ resource "aws_security_group" "runner" {
 }
 
 resource "aws_security_group_rule" "runner_ssh" {
-  count = "${var.enable_gitlab_runner_ssh_access ? 1 : 0}"
+  count = var.enable_gitlab_runner_ssh_access ? 1 : 0
 
   type        = "ingress"
   from_port   = 22
   to_port     = 22
   protocol    = "tcp"
-  cidr_blocks = ["${var.gitlab_runner_ssh_cidr_blocks}"]
+  cidr_blocks = var.gitlab_runner_ssh_cidr_blocks
 
-  security_group_id = "${aws_security_group.runner.id}"
+  security_group_id = aws_security_group.runner.id
 }
 
 resource "aws_security_group" "docker_machine" {
@@ -181,25 +181,32 @@ data "template_file" "runners" {
 
 resource "aws_autoscaling_group" "gitlab_runner_instance" {
   name                = "${var.environment}-as-group"
-  vpc_zone_identifier = ["${var.subnet_ids_gitlab_runner}"]
+  vpc_zone_identifier = var.subnet_ids_gitlab_runner
 
-  min_size                  = "1"
-  max_size                  = "1"
-  desired_capacity          = "1"
+  min_size                  = 1
+  max_size                  = 1
+  desired_capacity          = 1
   health_check_grace_period = 0
-  launch_configuration      = "${aws_launch_configuration.gitlab_runner_instance.name}"
+  launch_configuration      = aws_launch_configuration.gitlab_runner_instance.name
 
-tags = concat(
-  data.null_data_source.tags.*.outputs,
-  [
-    {
-      key                 = "Name"
-      value               = local.name_runner_instance
-      propagate_at_launch = true
+  dynamic "tag" {
+    for_each = concat(
+      data.null_data_source.tags[*].outputs,
+      [
+        {
+          key                 = "Name"
+          value               = local.name_runner_instance
+          propagate_at_launch = true
+        }
+      ],
+    )
+
+    content {
+      key                 = tag.value.key
+      value               = tag.value.value
+      propagate_at_launch = tag.value.propagate_at_launch
     }
-  ],
-)
-
+  }
 }
 
 data "aws_ami" "runner" {
@@ -322,8 +329,7 @@ resource "aws_iam_instance_profile" "docker_machine" {
 ### Service linked policy, optional
 ################################################################################
 data "template_file" "service_linked_role" {
-  count = var.allow_iam_service_linked_role_creation ? 1 : 0
-
+  count    = var.allow_iam_service_linked_role_creation ? 1 : 0
   template = file("${path.module}/policies/service-linked-role-create-policy.json")
 }
 
@@ -338,18 +344,17 @@ resource "aws_iam_policy" "service_linked_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "service_linked_role" {
-  count = "${var.allow_iam_service_linked_role_creation ? 1 : 0}"
+  count = var.allow_iam_service_linked_role_creation ? 1 : 0
 
-  role       = "${aws_iam_role.instance.name}"
-  policy_arn = "${aws_iam_policy.service_linked_role.arn}"
+  role       = aws_iam_role.instance.name
+  policy_arn = aws_iam_policy.service_linked_role[count.index].arn
 }
 
 ################################################################################
 ### AWS Systems Manager access to store runner token once registered
 ################################################################################
 data "template_file" "ssm_policy" {
-  count = var.enable_manage_gitlab_token ? 1 : 0
-
+  count    = var.enable_manage_gitlab_token ? 1 : 0
   template = file("${path.module}/policies/instance-secure-parameter-role-policy.json")
 }
 
@@ -364,8 +369,8 @@ resource "aws_iam_policy" "ssm" {
 }
 
 resource "aws_iam_role_policy_attachment" "ssm" {
-  count = "${var.enable_manage_gitlab_token ? 1 : 0}"
+  count = var.enable_manage_gitlab_token ? 1 : 0
 
-  role       = "${aws_iam_role.instance.name}"
-  policy_arn = "${aws_iam_policy.ssm.arn}"
+  role       = aws_iam_role.instance.name
+  policy_arn = aws_iam_policy.ssm[count.index].arn
 }
