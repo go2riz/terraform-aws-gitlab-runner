@@ -1,6 +1,10 @@
 resource "aws_key_pair" "key" {
   key_name   = "${var.environment}-gitlab-runner"
   public_key = "${var.ssh_public_key}"
+  # NEW: don’t try to replace the keypair if the public_key appears different
+  lifecycle {
+    ignore_changes = [public_key]
+  }
 }
 
 locals {
@@ -176,6 +180,13 @@ data "template_file" "runners" {
     runners_output_limit            = var.runners_output_limit
     bucket_name                     = aws_s3_bucket.build_cache.bucket
     shared_cache                    = var.cache_shared
+    runners_executor       = var.runners_executor
+    runners_idle_count     = var.runners_idle_count
+    runners_idle_time      = var.runners_idle_time
+    runners_image          = var.runners_image
+    runners_privileged     = var.runners_privileged
+    runners_shm_size       = var.runners_shm_size
+    runners_token          = var.runners_token
   }
 }
 
