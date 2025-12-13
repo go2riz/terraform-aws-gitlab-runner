@@ -32,7 +32,7 @@ variable "subnet_ids_gitlab_runner" {
 variable "instance_type" {
   description = "Instance type used for the GitLab runner."
   type        = string
-  default     = "t3.micro"
+  default     = "t3.medium"
 }
 
 variable "runner_instance_spot_price" {
