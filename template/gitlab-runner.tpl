@@ -29,7 +29,7 @@ then
   reg_token_prefix="$${gitlab_runner_registration_token:0:4}"
 
   echo "GitLab registration token length: $reg_token_len" >> /var/log/user-data.log
-  echo "GitLab registration token prefix (masked): ${reg_token_prefix}****" >> /var/log/user-data.log
+  echo "GitLab registration token prefix (masked): $reg_token_prefix" >> /var/log/user-data.log
   resp=$(curl -sS --request POST -L "${runners_gitlab_url}/api/v4/runners" \
     --form "token=${gitlab_runner_registration_token}" \
     --form "tag_list=${gitlab_runner_tag_list}" \
