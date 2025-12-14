@@ -41,5 +41,13 @@ instanceId=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document |
 sed -i -e "s/{instanceId}/$instanceId/g" /etc/awslogs/awslogs.conf
 
 
-service awslogs start
-chkconfig awslogs on
+#service awslogs start
+#chkconfig awslogs on
+
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl start awslogsd || systemctl start awslogs || true
+else
+  service awslogs start || true
+fi
+
+chkconfig awslogs on 2>/dev/null || true
