@@ -101,7 +101,7 @@ resource "aws_ssm_parameter" "runner_registration_token" {
 
   lifecycle {
     ignore_changes = [
-      "value",
+      value,
     ]
   }
 }
