@@ -15,7 +15,7 @@ then
 fi
 
 curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | bash
-yum install gitlab-runner-${gitlab_runner_version} -y
+yum install gitlab-runner -y
 curl -L https://github.com/docker/machine/releases/download/v${docker_machine_version}/docker-machine-`uname -s`-`uname -m` >/tmp/docker-machine && \
   chmod +x /tmp/docker-machine && \
   cp /tmp/docker-machine /usr/local/bin/docker-machine && \
