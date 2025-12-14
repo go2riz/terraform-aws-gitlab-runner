@@ -25,8 +25,8 @@ curl -L https://github.com/docker/machine/releases/download/v${docker_machine_ve
 token=$(aws ssm get-parameters --names "${secure_parameter_store_runner_token_key}" --with-decryption --region "${secure_parameter_store_region}" | jq -r ".Parameters | .[0] | .Value")
 if [[ `echo ${runners_token}` == "__REPLACED_BY_USER_DATA__" && `echo $token` == "null" ]]
 then
-  reg_token_len=${#gitlab_runner_registration_token}
-  reg_token_prefix="${gitlab_runner_registration_token:0:4}"
+  reg_token_len=$${#gitlab_runner_registration_token}
+  reg_token_prefix="$${gitlab_runner_registration_token:0:4}"
 
   echo "GitLab registration token length: ${reg_token_len}" >> /var/log/user-data.log
   echo "GitLab registration token prefix (masked): ${reg_token_prefix}****" >> /var/log/user-data.log
