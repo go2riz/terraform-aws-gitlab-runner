@@ -13,8 +13,15 @@ do
   yum -y update  && break || sleep 60
 done
 
-yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-restart amazon-ssm-agent
+#yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+#restart amazon-ssm-agent
+yum install -y amazon-ssm-agent || true
+
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl restart amazon-ssm-agent || true
+else
+  service amazon-ssm-agent restart || true
+fi
 
 ${logging}
 
