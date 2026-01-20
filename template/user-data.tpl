@@ -26,3 +26,26 @@ fi
 ${logging}
 
 ${gitlab_runner}
+
+# -----------------------------
+# Scheduled Docker cleanup
+# -----------------------------
+# Ensure required tools exist (flock is usually in util-linux; install if missing)
+command -v flock >/dev/null 2>&1 || yum -y install util-linux || true
+
+cat >/etc/cron.d/docker-prune <<'EOF'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0 3 * * * root /usr/bin/flock -n /var/run/docker-prune.lock /usr/bin/docker system prune -af --volumes --filter "until=24h" >> /var/log/docker-prune.log 2>&1
+EOF
+
+chmod 0644 /etc/cron.d/docker-prune
+
+# Ensure cron service is running (Amazon Linux / RHEL family)
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl enable crond || true
+  systemctl restart crond || true
+else
+  chkconfig crond on || true
+  service crond restart || true
+fi
